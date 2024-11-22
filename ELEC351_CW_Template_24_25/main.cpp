@@ -33,6 +33,14 @@ Thread tsample;
 Thread t2;
 Thread t3;
 
+//Mutex
+//Mutex dataMutex;
+
+//Semaphore
+Semaphore dataLock(0, 1);
+
+//Ticker
+Ticker timer;
 
 int sample_num = 0;
 struct sampleData{
@@ -40,11 +48,10 @@ struct sampleData{
     float pressure;
     float light_level;
 };
+sampleData data;
+bool sampleflag = 0;
 
-sampleData getsample();
-void printsample(float temp, float pressure, float light_level);
-void thresholdsample(float light_level);
-void sampleThread();
+
 
 int main()
 {
@@ -84,15 +91,10 @@ int main()
     tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
     printf("%s\n",asctime(tt));     // Print in human readable format
 
-    while (true) {
-        
-        tsample.start(sampleThread);
+    timer.attach(&sampleThread, 10s);
+    t2.start(sampleP);
 
-        // Print the time and date
-        time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
-        struct tm* tt;                  // Create empty tm struct
-        tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
-        printf("%s\n",asctime(tt));     // Print in human readable format
+    while (true) {
 
         // Write the time and date on the LCD
         disp.cls();                     // Clear the LCD                 
@@ -105,60 +107,10 @@ int main()
         strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "     %H:%M", tt);   // Create a string HH:mm
         disp.locate(1,0);                                                       // Set LCD cursor to (0,0)
         disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
-
-    }
-}
-
-
-sampleData getsample(){
-    sampleData data;
-    data.temp = env.getTemperature();
-    data.pressure = env.getPressure();
-    data.light_level = ldr.read();
-    return data;
-}
-
-void printsample(float temp, float pressure, float light_level){
-    // Print the samples to the terminal
-    printf("\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n", sample_num,temp,pressure,light_level);
-
-    sample_num++;
-
-    // Write the current light level as a float to the 7-segment display
-    latchedLEDs.write_seven_seg(light_level);
-}
-
-void thresholdsample(float light_level){
-    // If the current light level is above a threshold take action
-    if(light_level>0.5f){
-        for(int i=0;i<4;i++){
-            buzz.playTone("C");                     // Play tone on buzzer
-            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on RGB bar
-            latchedLEDs.write_strip(0xFF,GREEN);
-            latchedLEDs.write_strip(0xFF,BLUE);
-            ThisThread::sleep_for(200ms);
-
-            buzz.rest();                            // Stop buzzer
-            latchedLEDs.write_strip(0x0,RED);       // Turn off all LEDs on RGB bar
-            latchedLEDs.write_strip(0x0,GREEN);
-            latchedLEDs.write_strip(0x0,BLUE);
-            ThisThread::sleep_for(200ms);
-        }
-    }
-    else{
-        latchedLEDs.write_strip(0x0,RED);           // Turn off all LEDs on RGB bar
-        latchedLEDs.write_strip(0x0,GREEN);
-        latchedLEDs.write_strip(0x0,BLUE);
-    }
-}
-
-void sampleThread(){
-    while(1){
-        sampleData data = getsample();
-        printsample(data.temp, data.pressure, data.light_level);
-
-        thresholdsample(data.light_level);
-
         ThisThread::sleep_for(10s);
     }
 }
+
+/**********************************************************************************************
+Put this into the header file
+**********************************************************************************************/
