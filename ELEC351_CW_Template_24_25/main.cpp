@@ -16,17 +16,8 @@
  * 
  */
 
-#include <iostream>
-#include "uop_msb.h"
-#include "mbed.h"
-#include <chrono>
+#include "sample.hpp"
 
-
-//These objects have already been created for you in uop_msb.h
-extern EnvSensor env;
-extern LatchedLED latchedLEDs;
-extern SDCard sd;
-extern LCD_16X2_DISPLAY disp;
 
 //threads
 Thread tsample;
@@ -35,21 +26,6 @@ Thread t3;
 
 //Mutex
 //Mutex dataMutex;
-
-//Semaphore
-Semaphore dataLock(0, 1);
-
-//Ticker
-Ticker timer;
-
-int sample_num = 0;
-struct sampleData{
-    float temp;
-    float pressure;
-    float light_level;
-};
-sampleData data;
-bool sampleflag = 0;
 
 
 
@@ -111,6 +87,3 @@ int main()
     }
 }
 
-/**********************************************************************************************
-Put this into the header file
-**********************************************************************************************/

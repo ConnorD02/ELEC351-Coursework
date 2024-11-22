@@ -1,12 +1,13 @@
 #include "sample.hpp"
 
-sampleData getsample(){
-    sampleData data;
-    data.temp = env.getTemperature();
-    data.pressure = env.getPressure();
-    data.light_level = ldr.read();
-    return data;
-}
+//Semaphore
+Semaphore dataLock;
+
+Ticker timer;
+int sample_num;
+
+
+sampleData data;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
