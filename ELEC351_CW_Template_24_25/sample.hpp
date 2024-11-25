@@ -9,7 +9,7 @@ struct sampleData{
     float temp;
     float pressure;
     float light_level;
-    sampleData getsample(){
+    void getsample(){
         temp = env.getTemperature();
         pressure = env.getPressure();
         light_level = ldr.read();
@@ -19,7 +19,7 @@ struct sampleData{
 
 extern int sample_num;
 
-sampleData getsample();
+void getsample();
 void printsample(float temp, float pressure, float light_level);
 void thresholdsample(float light_level);
 void sampleThread();

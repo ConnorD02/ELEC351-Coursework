@@ -62,9 +62,7 @@ void thresholdsample(float temp, float pressure, float light_level){
 }
 
 void sampleThread(){
-        sampleData newdata = getsample();
-        
-        data = newdata;
+        getsample();
         //Set flag to allow another thread to print and do threshold stuff
         //sampleflag = 1;
         dataLock.release();
