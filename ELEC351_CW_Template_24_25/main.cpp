@@ -60,6 +60,8 @@ int main()
         printf("No SD Card Detected\n");
     }
 
+    dataBuffer.reserve(256);
+
 
     // Print the time and date
     time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC

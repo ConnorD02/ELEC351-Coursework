@@ -10,6 +10,8 @@ EventQueue queue;
 
 sampleData data;
 
+std::vector<sampleData> sampleBuffer;
+
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
     printf("\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n", sample_num,temp,pressure,light_level);

@@ -20,6 +20,9 @@ extern EventQueue queue;
 
 extern int sample_num;
 
+// Buffer to hold multiple samples
+extern std::vector<sampleData> dataBuffer;
+
 void getsample();
 void printsample(float temp, float pressure, float light_level);
 void thresholdsample(float light_level);
