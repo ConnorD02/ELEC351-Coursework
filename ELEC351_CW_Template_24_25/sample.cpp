@@ -6,6 +6,7 @@ Semaphore dataLock;
 Ticker timer;
 int sample_num;
 
+EventQueue queue;
 
 sampleData data;
 
@@ -63,32 +64,24 @@ void thresholdsample(float temp, float pressure, float light_level){
 
 void sampleThread(){
         data.getsample();
-        //Set flag to allow another thread to print and do threshold stuff
-        //sampleflag = 1;
-        dataLock.release();
+        queue.call(sampleP);
 }
 
 void timerISR(){
-    dataLock.release();
+    queue.call(sampleThread);
 }
 
 void sampleP(){
-    while(1){
-    //This should only run after flag has been set bu the sampling thread
-    //if(sampleflag){
-        dataLock.acquire();
-        //print to terminal
-        printsample(data.temp, data.pressure, data.light_level);
-        //process the data
-        thresholdsample(data.temp, data.pressure, data.light_level);
-        //sampleflag = 0;
-        // Print the time and date
-        time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
-        struct tm* tt;                  // Create empty tm struct
-        tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
-        printf("%s\n",asctime(tt));     // Print in human readable format
-    //}
-
-    ThisThread::sleep_for(100ms);
-    }
+    dataLock.acquire();
+    //print to terminal
+    printsample(data.temp, data.pressure, data.light_level);
+    //process the data
+    thresholdsample(data.temp, data.pressure, data.light_level);
+    // Print the time and date
+    time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
+    struct tm* tt;                  // Create empty tm struct
+    tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
+    printf("%s\n",asctime(tt));     // Print in human readable format
+    dataLock.release();
+    
 }

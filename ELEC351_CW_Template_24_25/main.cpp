@@ -21,7 +21,7 @@
 
 //threads
 Thread tsample;
-Thread t2;
+Thread tq;
 Thread t3;
 
 //Mutex
@@ -68,7 +68,7 @@ int main()
     printf("%s\n",asctime(tt));     // Print in human readable format
 
     timer.attach(&sampleThread, 10s);
-    t2.start(sampleP);
+    tq.start(callback(&queue, &EventQueue::dispatch_forever));
 
     while (true) {
 

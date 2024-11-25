@@ -16,6 +16,7 @@ struct sampleData{
     }
 };
 
+extern EventQueue queue;
 
 extern int sample_num;
 
