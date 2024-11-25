@@ -87,3 +87,48 @@ void sampleP(){
     dataLock.release();
     
 }
+
+void adddataBuffer(float temp, float pressure, float light_level){
+    sampleData newsample = {temp, pressure, light_level};
+    sampleBuffer.push_back(newsample);
+
+    if (sampleBuffer.size >= 256){
+        //write to SD
+        sampleBuffer.clear();
+    }
+}
+
+/*
+void writeBufferToSD() {
+    if (sd.card_inserted()) {
+        // Open file for appending
+        FILE *file = fopen("/sd/sample_data.txt", "a");
+        if (file != nullptr) {
+            // Write each sample in the buffer to the file
+            for (const auto &sample : sampleBuffer) {
+                fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n",
+                        sample.temp, sample.pressure, sample.light_level);
+            }
+            fclose(file);
+            printf("Buffer written to SD card\n");
+        } else {
+            printf("Failed to open file for writing\n");
+        }
+    } else {
+        printf("SD card not inserted\n");
+    }
+}
+// SD card writing thread - flushes data to the SD card periodically
+void sdCardWriteThread() {
+    while (true) {
+        // Periodically flush the buffer if it's not full yet
+        ThisThread::sleep_for(5s);
+        bufferLock.acquire();
+        if (!sampleBuffer.empty()) {
+            writeBufferToSD();
+            sampleBuffer.clear(); // Clear the buffer after writing
+        }
+        bufferLock.release();
+    }
+}
+*/

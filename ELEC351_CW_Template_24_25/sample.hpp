@@ -29,6 +29,7 @@ void thresholdsample(float light_level);
 void sampleThread();
 void sampleP();
 void timerISR();
+void adddataBuffer(float temp, float pressure, float light_level);
 
 //Ticker
 extern Ticker timer;
