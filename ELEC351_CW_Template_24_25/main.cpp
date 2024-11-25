@@ -67,8 +67,10 @@ int main()
     tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
     printf("%s\n",asctime(tt));     // Print in human readable format
 
+    tsample.start(sampleThread);    //Sample on the highest priority thread
     timer.attach(&sampleThread, 10s);
     tq.start(callback(&queue, &EventQueue::dispatch_forever));
+    //Start Thread tq onto the event queue
 
     while (true) {
 
