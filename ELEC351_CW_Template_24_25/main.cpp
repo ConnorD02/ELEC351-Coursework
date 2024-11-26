@@ -30,6 +30,7 @@ int main()
     Thread tsample(osPriorityHigh);
     Thread t2(osPriorityNormal);
     Thread t3(osPriorityNormal);
+    //maybe set another thread to handle an event queue only consisting of printing 
 
     // Set output enable on the latched LEDs.
     latchedLEDs.enable(true);
@@ -67,10 +68,13 @@ int main()
     tq.start(callback(&queue, &EventQueue::dispatch_forever));
     //Start Thread tq onto the event queue
 
+    //I don't think this code above is working in the way I think it is
+    //A Ticker will count for 10s and then trigger the timerISR
+
     while (true) {
         
         
-
+/*
         // Print the time and date
         time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
         struct tm* tt;                  // Create empty tm struct
@@ -88,7 +92,8 @@ int main()
         strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "     %H:%M", tt);   // Create a string HH:mm
         disp.locate(1,0);                                                       // Set LCD cursor to (0,0)
         disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
-
+*/
+        ThisThread::sleep_for(Kernel::wait_for_u32_forever);
     }
 }
 

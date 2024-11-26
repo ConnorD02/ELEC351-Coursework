@@ -6,7 +6,10 @@ Ticker timer;
 EventQueue queue;
 
 int sample_num = 0;
+
 sampleData data;
+
+std::vector<sampleData> dataBuffer;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
@@ -73,13 +76,59 @@ void sampleP(){
     //dataLock.acquire();
     //print to terminal
     printsample(data.temp, data.pressure, data.light_level);
-    //process the data
-    thresholdsample(data.temp, data.pressure, data.light_level);
     // Print the time and date
     time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
     struct tm* tt;                  // Create empty tm struct
     tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
     printf("%s\n",asctime(tt));     // Print in human readable format
+    //process the data
+    thresholdsample(data.temp, data.pressure, data.light_level);
+
     //dataLock.release();
     
 }
+
+void adddataBuffer(float temp, float pressure, float light_level){
+    sampleData newsample = {temp, pressure, light_level};
+    dataBuffer.push_back(newsample);
+
+    if (dataBuffer.size() >= 256){
+        //add write to SD function here
+        dataBuffer.clear();
+    }
+}
+
+/*
+void writeBufferToSD() {
+    if (sd.card_inserted()) {
+        // Open file for appending
+        FILE *file = fopen("/sd/sample_data.txt", "a");
+        if (file != nullptr) {
+            // Write each sample in the buffer to the file
+            for (const auto &sample : sampleBuffer) {
+                fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n",
+                        sample.temp, sample.pressure, sample.light_level);
+            }
+            fclose(file);
+            printf("Buffer written to SD card\n");
+        } else {
+            printf("Failed to open file for writing\n");
+        }
+    } else {
+        printf("SD card not inserted\n");
+    }
+}
+// SD card writing thread - flushes data to the SD card periodically
+void sdCardWriteThread() {
+    while (true) {
+        // Periodically flush the buffer if it's not full yet
+        ThisThread::sleep_for(5s);
+        bufferLock.acquire();
+        if (!sampleBuffer.empty()) {
+            writeBufferToSD();
+            sampleBuffer.clear(); // Clear the buffer after writing
+        }
+        bufferLock.release();
+    }
+}
+*/
