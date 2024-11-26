@@ -69,7 +69,8 @@ int main()
     //Start Thread tq onto the event queue
 
     //I don't think this code above is working in the way I think it is
-    //A Ticker will count for 10s and then trigger the timerISR
+    //A Ticker will count for 10s and then trigger the timerISR which adds sampleThread to the event queue
+    //doing its function and adding the next functions to the queue after till everything is printed and added to buffer
 
     while (true) {
         

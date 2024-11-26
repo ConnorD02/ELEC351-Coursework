@@ -11,6 +11,8 @@ sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
+Mailbox mailData;
+
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
     printf("\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n", sample_num,temp,pressure,light_level);
@@ -74,6 +76,8 @@ void timerISR(){
 
 void sampleP(){
     //dataLock.acquire();
+    //add to buffer
+    adddataBuffer(data.temp, data.pressure, data.light_level);
     //print to terminal
     printsample(data.temp, data.pressure, data.light_level);
     // Print the time and date
@@ -88,9 +92,15 @@ void sampleP(){
     
 }
 
-void adddataBuffer(float temp, float pressure, float light_level){
-    sampleData newsample = {temp, pressure, light_level};
+void adddataBuffer(float temp, float pressure, float light_level, float sample_num){
+    sampleData newsample = {sample_num, temp, pressure, light_level};
+    if(mailData.full()){
+        //add write to SD function here
+        mailData.flush();
+    }
     dataBuffer.push_back(newsample);
+    //Mailbox version
+    mailData.put(newsample);
 
     if (dataBuffer.size() >= 256){
         //add write to SD function here
@@ -98,11 +108,12 @@ void adddataBuffer(float temp, float pressure, float light_level){
     }
 }
 
-/*
-void writeBufferToSD() {
+
+void writeBufferToSD(sampleData datatosend) {
     if (sd.card_inserted()) {
         // Open file for appending
-        FILE *file = fopen("/sd/sample_data.txt", "a");
+        sampleData* samples = new sampleData;
+        int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
         if (file != nullptr) {
             // Write each sample in the buffer to the file
             for (const auto &sample : sampleBuffer) {
@@ -131,4 +142,3 @@ void sdCardWriteThread() {
         bufferLock.release();
     }
 }
-*/
