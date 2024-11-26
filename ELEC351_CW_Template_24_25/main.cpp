@@ -84,9 +84,11 @@ int main()
     tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
     printf("%s\n",asctime(tt));     // Print in human readable format
 
+    tsample.start(sampleThread);
+
     while (true) {
         
-        tsample.start(sampleThread);
+        
 
         // Print the time and date
         time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
