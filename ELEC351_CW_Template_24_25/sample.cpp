@@ -1,14 +1,12 @@
-#include "sample.h"
+#include "sample.hpp"
+
+
+Ticker timer;
+
+EventQueue queue;
 
 int sample_num = 0;
-
-sampleData getsample(){
-    sampleData data;
-    data.temp = env.getTemperature();
-    data.pressure = env.getPressure();
-    data.light_level = ldr.read();
-    return data;
-}
+sampleData data;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
@@ -20,9 +18,27 @@ void printsample(float temp, float pressure, float light_level){
     latchedLEDs.write_seven_seg(light_level);
 }
 
-void thresholdsample(float light_level){
+void thresholdsample(float temp, float pressure, float light_level){
     // If the current light level is above a threshold take action
-    if(light_level>0.5f){
+    bool lightT = 0; bool tempT=0; bool presT=0;
+
+    if(light_level>0.55f){
+        lightT = 1;
+    }else if(light_level<0.45f){
+        lightT = 0;
+    }
+    if(temp>26.1f){
+        tempT = 1;
+    }else if(temp<25.8f){
+        tempT = 0;
+    }
+    if(pressure>1011){
+        presT = 1;
+    }else if(pressure<1009){
+        presT = 0;
+    }
+
+    if(lightT || tempT || presT){
         for(int i=0;i<4;i++){
             buzz.playTone("C");                     // Play tone on buzzer
             latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on RGB bar
@@ -45,12 +61,25 @@ void thresholdsample(float light_level){
 }
 
 void sampleThread(){
-    while(1){
-        sampleData data = getsample();
-        printsample(data.temp, data.pressure, data.light_level);
+        data.getsample();
+        queue.call(sampleP);
+}
 
-        thresholdsample(data.light_level);
+void timerISR(){
+    queue.call(sampleThread);
+}
 
-        ThisThread::sleep_for(10s);
-    }
+void sampleP(){
+    //dataLock.acquire();
+    //print to terminal
+    printsample(data.temp, data.pressure, data.light_level);
+    //process the data
+    thresholdsample(data.temp, data.pressure, data.light_level);
+    // Print the time and date
+    time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
+    struct tm* tt;                  // Create empty tm struct
+    tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
+    printf("%s\n",asctime(tt));     // Print in human readable format
+    //dataLock.release();
+    
 }

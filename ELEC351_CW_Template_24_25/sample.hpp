@@ -17,6 +17,8 @@ struct sampleData{
     }
 };
 
+extern Ticker timer;
+
 extern EventQueue queue;
 
 extern int sample_num;
