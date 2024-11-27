@@ -94,28 +94,40 @@ void sampleP(){
 
 void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level){
     sampleData newsample = {sample_num, temp, pressure, light_level};
-    sampleData *mail = mail_data.alloc();
+    sampleData *mail = mail_data.alloc();   //allocate memory for the mailbox
+    if(!mail_data.full()){
     mail->samplenum = sample_num;
     mail->temp = temp;
     mail->pressure = pressure;
     mail->light_level = light_level;
+    //add sampledata to the mailbox
     mail_data.put(mail);
-    if(mailData.full()){
+    } else{
         //add write to SD function here
-        mailData.flush();
-    }
-    dataBuffer.push_back(newsample);
-    //Mailbox version
-    mailData.put(newsample);
-
-    if (dataBuffer.size() >= 256){
-        //add write to SD function here
-        dataBuffer.clear();
     }
 }
 
 
 void writeBufferToSD(sampleData datatosend) {
+    //set mailbox into a buffer
+    
+    //Make sure SD card is still inserted
+
+    //int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
+    //but for the samples in the buffer
+    //fprintf(file, "Sample number: %d\n", samples[i]->samplenum);
+    //fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n\n",
+                //samples[i]->temp, samples[i]->pressure, samples[i]->light_level);
+
+    // Free the mail after writing it to the SD card
+        //mail_data.free(samples[i]);
+    //Where i is the mailbox size
+
+    //clear the buffer
+
+    /
+
+
     if (sd.card_inserted()) {
         // Open file for appending
         sampleData* samples = new sampleData;
@@ -135,7 +147,8 @@ void writeBufferToSD(sampleData datatosend) {
         printf("SD card not inserted\n");
     }
 }
-// SD card writing thread - flushes data to the SD card periodically
+
+/* SD card writing thread - flushes data to the SD card periodically
 void sdCardWriteThread() {
     while (true) {
         // Periodically flush the buffer if it's not full yet
@@ -148,3 +161,4 @@ void sdCardWriteThread() {
         bufferLock.release();
     }
 }
+*/

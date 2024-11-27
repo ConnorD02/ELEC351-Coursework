@@ -47,12 +47,10 @@ int main()
             printf("---------------------------\nFile contents:\n");
             sd.print_file("test.txt",false);
             printf("---------------------------\n");
-        }
-        else{
+        } else{
             printf("Error Writing to SD card\n");
         }
-    }
-    else{
+    } else{
         printf("No SD Card Detected\n");
     }
 
