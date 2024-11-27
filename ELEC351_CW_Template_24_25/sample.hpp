@@ -7,6 +7,7 @@
 #include <vector>
 
 struct sampleData{
+    uint32_t samplenum;
     float temp;
     float pressure;
     float light_level;
@@ -26,7 +27,7 @@ extern int sample_num;
 // Buffer to hold multiple samples
 extern std::vector<sampleData> dataBuffer;
 
-extern Mailbox mailData;
+extern Mail<sampleData, 128> mail_data;
 
 void getsample();
 void printsample(float temp, float pressure, float light_level);

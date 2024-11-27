@@ -11,7 +11,7 @@ sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
-Mailbox mailData;
+Mail<sampleData, 128> mail_data;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
@@ -92,8 +92,14 @@ void sampleP(){
     
 }
 
-void adddataBuffer(float temp, float pressure, float light_level, float sample_num){
+void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level){
     sampleData newsample = {sample_num, temp, pressure, light_level};
+    sampleData *mail = mail_data.alloc();
+    mail->samplenum = sample_num;
+    mail->temp = temp;
+    mail->pressure = pressure;
+    mail->light_level = light_level;
+    mail_data.put(mail);
     if(mailData.full()){
         //add write to SD function here
         mailData.flush();
