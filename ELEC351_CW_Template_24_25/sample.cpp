@@ -11,7 +11,7 @@ sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
-Mail<sampleData, 16> mail_data;
+Mail<sampleData, 10> mail_data;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
@@ -111,27 +111,29 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
 
 void writeBufferToSD(sampleData datatosend) {
     //set mailbox into a buffer each time something new comes in
-    while(1){
-        osEvent evt = mail_data.get();
-        if(evt.status == osEventMail){
-            //data* msg = (data*)evt.value.p;
+    while (true) {
+        osEvent evt = mail_data.get();  // Get an event from the mailbox
+        if (evt.status == osEventMail) {  // Check if a mail item is received
+            sampleData *sample = (sampleData*)evt.value.p;
+            
+            // Check if the SD card is inserted
+            if (sd.card_inserted()) {
+                //int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
+                //but for the samples in the buffer
+                //fprintf(file, "Sample number: %d\n", samples[i]->samplenum);
+                //fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n\n",
+                //samples[i]->temp, samples[i]->pressure, samples[i]->light_level);
+            } else {
+                printf("SD card not inserted\n");
+            }
+
+            // Free the mailbox space after writing
+            mail_data.free(sample);
+
+            //clear the buffer
         }
     }
-    //Make sure SD card is still inserted
-
-    //int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
-    //but for the samples in the buffer
-    //fprintf(file, "Sample number: %d\n", samples[i]->samplenum);
-    //fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n\n",
-                //samples[i]->temp, samples[i]->pressure, samples[i]->light_level);
-
-    // Free the mail after writing it to the SD card
-        //mail_data.free(samples[i]);
-    //Where i is the mailbox size
-
-    //clear the buffer
-
-    //
+    
 }
 
 /*

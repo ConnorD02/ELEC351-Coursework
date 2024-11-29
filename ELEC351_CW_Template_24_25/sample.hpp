@@ -27,7 +27,7 @@ extern int sample_num;
 // Buffer to hold multiple samples
 extern std::vector<sampleData> dataBuffer;
 
-extern Mail<sampleData, 16> mail_data;
+extern Mail<sampleData, 10> mail_data;
 
 void getsample();
 void printsample(float temp, float pressure, float light_level);
