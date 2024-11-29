@@ -11,7 +11,7 @@ sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
-Mail<sampleData, 128> mail_data;
+Mail<sampleData, 16> mail_data;
 
 void printsample(float temp, float pressure, float light_level){
     // Print the samples to the terminal
@@ -77,7 +77,7 @@ void timerISR(){
 void sampleP(){
     //dataLock.acquire();
     //add to buffer
-    adddataBuffer(data.temp, data.pressure, data.light_level);
+    adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level);
     //print to terminal
     printsample(data.temp, data.pressure, data.light_level);
     // Print the time and date
@@ -104,13 +104,19 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
     mail_data.put(mail);
     } else{
         //add write to SD function here
+        //Write current samples back to the mailbox after flushing it
     }
 }
 
 
 void writeBufferToSD(sampleData datatosend) {
-    //set mailbox into a buffer
-    
+    //set mailbox into a buffer each time something new comes in
+    while(1){
+        osEvent evt = mail_data.get();
+        if(evt.status == osEventMail){
+            //data* msg = (data*)evt.value.p;
+        }
+    }
     //Make sure SD card is still inserted
 
     //int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
@@ -125,9 +131,10 @@ void writeBufferToSD(sampleData datatosend) {
 
     //clear the buffer
 
-    /
+    //
+}
 
-
+/*
     if (sd.card_inserted()) {
         // Open file for appending
         sampleData* samples = new sampleData;
@@ -148,7 +155,7 @@ void writeBufferToSD(sampleData datatosend) {
     }
 }
 
-/* SD card writing thread - flushes data to the SD card periodically
+ SD card writing thread - flushes data to the SD card periodically
 void sdCardWriteThread() {
     while (true) {
         // Periodically flush the buffer if it's not full yet

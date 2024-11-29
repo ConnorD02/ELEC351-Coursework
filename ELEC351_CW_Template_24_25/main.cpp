@@ -36,7 +36,7 @@ int main()
     latchedLEDs.enable(true);
     
     // Set the time on the RTC (You can use https://www.epochconverter.com/ for testing)
-    uint64_t now = 1729519318;
+    uint64_t now = 1733043600;
     set_time(now);
 
     // Write some text to the SD card
@@ -73,7 +73,7 @@ int main()
     while (true) {
         
         
-/*
+
         // Print the time and date
         time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
         struct tm* tt;                  // Create empty tm struct
@@ -88,11 +88,11 @@ int main()
         disp.locate(0,0);                                                       // Set LCD cursor to (0,0)
         disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
         
-        strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "     %H:%M", tt);   // Create a string HH:mm
+        strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "     %H:%M:%S", tt);   // Create a string HH:mm
         disp.locate(1,0);                                                       // Set LCD cursor to (0,0)
         disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
-*/
-        ThisThread::sleep_for(Kernel::wait_for_u32_forever);
+
+        ThisThread::sleep_for(200ms);
     }
 }
 
