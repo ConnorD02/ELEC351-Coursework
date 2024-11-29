@@ -171,3 +171,25 @@ void sdCardWriteThread() {
     }
 }
 */
+
+//Terminal commands
+#include <thread>    // For std::thread
+#include <atomic>    // For std::atomic
+std::atomic<bool> inputReady(false); // To check if input is ready
+std::string userInput;
+
+void getUserInput() {
+    while (true) {
+        std::cout << "\nEnter a command: ";
+        std::getline(std::cin, userInput);
+        inputReady = true; // Set flag when input is ready
+    }
+}
+
+void performBackgroundTask() {
+    while (true) {
+        // Simulate some background work
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << "Performing background task...\n";
+    }
+}
