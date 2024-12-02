@@ -176,19 +176,113 @@ void sdCardWriteThread() {
 
 //Terminal commands
 
-std::string userInput;
+std::string userInput;                 //store user input from terminal
+std::vector<std::string> arguments;  // To store arguments from the user input
 
 void terminalInput() {
     while (true) {
         std::getline(std::cin, userInput);
-        inputReadySemaphore.release();  // Signal that input is ready
-        processUserInput();
+
+        if (!userInput.empty()){
+            inputReadySemaphore.release();  // Signal that input is ready
+            processUserInput();
+        }
     }
 }
 
 void processUserInput(){
     inputReadySemaphore.acquire();
-    if(userInput == )
-    printf("User input: %s\n", userInput.c_str());
+    //printf("User input: %s\n", userInput.c_str());
 
+    std::istringstream ss(userInput);
+    //allows the command to be separated into a string and numbers
+    std::string command;
+    std::string argument;
+    arguments.clear();  //clears all previous arguments
+
+    
+
+    ss >> command;
+
+    while(ss >> argument){
+        arguments.push_back(argument);
+    }
+
+    // Display the parsed input (for debugging)
+    printf("Command: %s\n", command.c_str());
+    printf("Arguments: ");
+    for (const auto& arg : arguments) {
+        printf("%s ", arg.c_str());
+    }
+    printf("\n");
+
+    if(command == "datetime"){
+        if (arguments.size() == 2) {
+            std::string date = arguments[0]; // Get the date string
+            std::string time = arguments[1]; // Get the time string
+            // Call the function to process the datetime string
+            processDateTime(date, time);
+        }
+    }else if(command == "flush"){
+        //Write current samples in the buffer to the SD card
+    }else if(command == "select"){
+        if(argument == "T"){
+            //set temp on the LED strip
+        }else if(argument == "P"){
+            //set pressure on LED strip
+        }else if(argument == "L"){
+            //set light on the LED strip
+        }
+    }else if(command == "sampling"){
+        if(argument == "0"){
+            //turn off sampling
+        }else if(argument =="1"){
+            //turn on sampling
+        }
+    }
+
+}
+
+void processDateTime(const std::string& date, const std::string& time){
+    int day, month, year, hour, minute, second;
+
+    std::stringstream ss(date);
+    char delimiter;
+
+    //extract all parts of the date and time
+    ss >> day >> delimiter >> month >> delimiter >> year;
+
+    //std::getline (ss, time);
+    std::stringstream timepart(time);
+
+    timepart >> hour >> delimiter >> minute >> delimiter >> second;
+
+    printf("Setting to:\n");
+    printf("Day: %d, Month: %d, Year: %d\n", day, month, year);
+    printf("Hour: %d, Minute: %d, Second: %d\n", hour, minute, second);
+
+   epochConvert(year, month, day, hour, minute, second); 
+
+}
+
+struct tm t;
+time_t t_of_day;
+struct tm* tmm;
+void epochConvert(int year, int month, int day, int hour, int minute, int second){
+    
+
+    t.tm_year = year + 100;  // Year - 1900
+    t.tm_mon = month - 1;     // Month, where 0 = jan, so we subtract 1
+    t.tm_mday = day;          // Day of the month
+    t.tm_hour = hour;
+    t.tm_min = minute;
+    t.tm_sec = second;
+
+    //tmm->tm_isdst = -1;          // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+    // Convert to time_t (seconds since the Epoch)
+    t_of_day = mktime(&t);
+ // t_of_day = localtime(tmm);      // Convert time_t to tm struct using localtime
+
+    set_time(t_of_day);
 }
