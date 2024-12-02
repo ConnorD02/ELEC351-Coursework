@@ -70,6 +70,8 @@ int main()
     //A Ticker will count for 10s and then trigger the timerISR which adds sampleThread to the event queue
     //doing its function and adding the next functions to the queue after till everything is printed and added to buffer
 
+    t3.start(terminalInput);
+
     while (true) {
         
         

@@ -5,6 +5,8 @@ Ticker timer;
 
 EventQueue queue;
 
+Semaphore inputReadySemaphore(0, 1);  // Count 0 means no input is ready initially
+
 int sample_num = 0;
 
 sampleData data;
@@ -173,23 +175,20 @@ void sdCardWriteThread() {
 */
 
 //Terminal commands
-#include <thread>    // For std::thread
-#include <atomic>    // For std::atomic
-std::atomic<bool> inputReady(false); // To check if input is ready
+
 std::string userInput;
 
-void getUserInput() {
+void terminalInput() {
     while (true) {
-        std::cout << "\nEnter a command: ";
         std::getline(std::cin, userInput);
-        inputReady = true; // Set flag when input is ready
+        inputReadySemaphore.release();  // Signal that input is ready
+        processUserInput();
     }
 }
 
-void performBackgroundTask() {
-    while (true) {
-        // Simulate some background work
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        std::cout << "Performing background task...\n";
-    }
+void processUserInput(){
+    inputReadySemaphore.acquire();
+    if(userInput == )
+    printf("User input: %s\n", userInput.c_str());
+
 }
