@@ -17,9 +17,14 @@ std::vector<sampleData> dataBuffer;
 
 Mail<sampleData, 10> mail_data;
 
-void printsample(float temp, float pressure, float light_level){
+void printsample(float temp, float pressure, float light_level, time_t timestamp){
     // Print the samples to the terminal
     printf("\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n", sample_num,temp,pressure,light_level);
+
+    struct tm* tt;                  // Create empty tm struct
+    tt = localtime(&data.timestamp);      // Convert time_t to tm struct using localtime
+    
+    printf("%s\n",asctime(tt));     // Print in human readable format
 
     sample_num++;
 
@@ -83,14 +88,11 @@ void timerISR(){
 void sampleP(){
     //dataLock.acquire();
     //add to buffer
-    adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level);
-    //print to terminal
-    printsample(data.temp, data.pressure, data.light_level);
-    // Print the time and date
-    time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
-    struct tm* tt;                  // Create empty tm struct
-    tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
-    printf("%s\n",asctime(tt));     // Print in human readable format
+    adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
+    
+    //print sample results and time and date to terminal
+    printsample(data.temp, data.pressure, data.light_level, data.timestamp);
+
     //process the data
     thresholdsample(data.temp, data.pressure, data.light_level);
 
@@ -98,16 +100,22 @@ void sampleP(){
     
 }
 
-void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level){
+void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level, time_t timestamp){
     sampleData newsample = {sample_num, temp, pressure, light_level};
     sampleData *mail = mail_data.alloc();   //allocate memory for the mailbox
     if(!mail_data.full()){
-    mail->samplenum = sample_num;
-    mail->temp = temp;
-    mail->pressure = pressure;
-    mail->light_level = light_level;
-    //add sampledata to the mailbox
-    mail_data.put(mail);
+
+        struct tm* tt = localtime(&timestamp);  // Convert time_t to tm struct using localtime
+        char timeStr[26];  // Array to store the formatted time string
+        asctime_r(tt, timeStr);  // Convert tm struct to string (reentrant version of asctime)
+
+        mail->samplenum = sample_num;
+        mail->temp = temp;
+        mail->pressure = pressure;
+        mail->light_level = light_level;
+        mail->timestamp = 
+        //add sampledata to the mailbox
+        mail_data.put(mail);
     } else{
         //add write to SD function here
         //Write current samples back to the mailbox after flushing it
@@ -124,17 +132,35 @@ void writeBufferToSD(sampleData datatosend) {
             
             // Check if the SD card is inserted
             if (sd.card_inserted()) {
-                //int error = sd.write_file("sample.txt", "sample %d \ntemp = %f, pressure = %f, light = %f\n\n", sample_num, );
+
+                int err1 = sd.write_file("sample.txt", "sample %d \n", sample->samplenum);
+                int err2 = sd.write_file("sample.txt", "temp = %f\n", sample->temp);
+                int err3 = sd.write_file("sample.txt", "pressure = %f\n", sample->pressure);
+                int err4 = sd.write_file("sample.txt", "light = %f\n", sample->light_level);
+                int err5 = sd.write_file("sample.txt", "%f\n\n", sample->timestamp);
+
+                //NOTE: Also need to send the time and date with the samples.
+                
+                if(err1 && err2 && err3 && err4 == 0){   // If is successful, read the content of the file back
+            printf("Successfully written to SD card\n");
+            printf("---------------------------\nFile contents:\n");
+            sd.print_file("sample.txt",false);
+            printf("---------------------------\n");
+                // Free the mailbox space after writing
+            mail_data.free(sample);
+        } else{
+            printf("Error Writing to SD card\n");
+        }
                 //but for the samples in the buffer
                 //fprintf(file, "Sample number: %d\n", samples[i]->samplenum);
                 //fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n\n",
                 //samples[i]->temp, samples[i]->pressure, samples[i]->light_level);
+
             } else {
                 printf("SD card not inserted\n");
             }
 
-            // Free the mailbox space after writing
-            mail_data.free(sample);
+            
 
             //clear the buffer
         }
@@ -227,9 +253,11 @@ void processUserInput(){
             // Call the function to process the datetime string
             processDateTime(date, time);
         }
+
     }else if(command == "flush"){
         //Write current samples in the buffer to the SD card
         printf("Flushing buffer\n");
+
     }else if(command == "select"){
         if(argument == "T" || "t"){
             //set temp on the LED strip
@@ -241,6 +269,7 @@ void processUserInput(){
             //set light on the LED strip
             printf("Set LED strip to light\n");
         }
+
     }else if(command == "sampling"){
         if(argument == "0"){
             //turn off sampling
@@ -297,4 +326,45 @@ void epochConvert(int year, int month, int day, int hour, int minute, int second
  // t_of_day = localtime(tmm);      // Convert time_t to tm struct using localtime
 
     set_time(t_of_day);
+}
+
+void stripLED(float temp, float pressure, float light_level, int mode){
+    //temp
+    //lower threshold for the LEDs around 15
+    //upper around 30
+    //Divide by 3 then by 8 for each colour then each LED respectively
+    //normalise the value to max temp being max and set LED
+    int tempLED = 24 * (temp - 15)/15;
+    if(mode == 0){
+        if(tempLED < 8){
+            latchedLEDs.write_strip((1 << tempLED),RED);
+            latchedLEDs.write_strip(0x00,GREEN);     //Turn off all LEDs on G bar
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(tempLED >= 8 && tempLED < 16){
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip((1 << (tempLED - 8)),GREEN);
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(tempLED >= 16 && tempLED < 24){
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
+            latchedLEDs.write_strip((1 << (tempLED - 16)),BLUE);
+        }else
+            latchedLEDs.write_strip(0xFF,BLUE);     //Turn on all LEDs on B bar
+    }
+
+    //pressure
+    //lower = 800
+    //upper = 1200
+    int presLED = 24 * (pressure - 800)/400;
+    if(mode == 1){
+        
+    }
+
+    //light
+    //lower = 0
+    //upper = 1
+    int lightLED = light_level*24;
+    if(mode == 2){
+        
+    }
+
 }

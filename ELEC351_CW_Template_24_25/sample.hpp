@@ -13,10 +13,12 @@ struct sampleData{
     float temp;
     float pressure;
     float light_level;
+    time_t timestamp;
     void getsample(){
         temp = env.getTemperature();
         pressure = env.getPressure();
         light_level = ldr.read();
+        timestamp = time(NULL);   // Get a time_t timestamp from the RTC
     }
 };
 
@@ -42,17 +44,18 @@ extern std::string userInput;
 extern std::vector<std::string> arguments;
 
 void getsample();
-void printsample(float temp, float pressure, float light_level);
+void printsample(float temp, float pressure, float light_level, time_t timestamp);
 void thresholdsample(float light_level);
 void sampleThread();
 void sampleP();
 void timerISR();
-void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level);
+void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level, time_t timestamp);
 void writeBufferToSD(sampleData datatosend);
 void terminalInput();
 void processUserInput();
 void processDateTime(const std::string& date, const std::string& time);
 void epochConvert(int year, int month, int day, int hour, int minute, int second);
+void stripLED(float temp, float pressure, float light_level);
 
 
 //Ticker
