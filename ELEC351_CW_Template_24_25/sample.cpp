@@ -9,6 +9,8 @@ Semaphore inputReadySemaphore(0, 1);  // Count 0 means no input is ready initial
 
 int sample_num = 0;
 
+bool sampleOn = 1;
+
 sampleData data;
 
 std::vector<sampleData> dataBuffer;
@@ -68,8 +70,10 @@ void thresholdsample(float temp, float pressure, float light_level){
 }
 
 void sampleThread(){
+    if(sampleOn){
         data.getsample();
         queue.call(sampleP);
+    }
 }
 
 void timerISR(){
@@ -225,19 +229,27 @@ void processUserInput(){
         }
     }else if(command == "flush"){
         //Write current samples in the buffer to the SD card
+        printf("Flushing buffer\n");
     }else if(command == "select"){
-        if(argument == "T"){
+        if(argument == "T" || "t"){
             //set temp on the LED strip
-        }else if(argument == "P"){
+            printf("Set LED strip to temperature\n");
+        }else if(argument == "P" || "P"){
             //set pressure on LED strip
-        }else if(argument == "L"){
+            printf("Set LED strip to pressure\n");
+        }else if(argument == "L" || "l"){
             //set light on the LED strip
+            printf("Set LED strip to light\n");
         }
     }else if(command == "sampling"){
         if(argument == "0"){
             //turn off sampling
+            sampleOn = 0;
+            printf("Sampling OFF\n");
         }else if(argument =="1"){
             //turn on sampling
+            sampleOn = 1;
+            printf("Sampling ON\n");
         }
     }
 
@@ -267,7 +279,7 @@ void processDateTime(const std::string& date, const std::string& time){
 
 struct tm t;
 time_t t_of_day;
-struct tm* tmm;
+
 void epochConvert(int year, int month, int day, int hour, int minute, int second){
     
 
