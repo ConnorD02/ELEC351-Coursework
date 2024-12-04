@@ -14,6 +14,7 @@ struct sampleData{
     float pressure;
     float light_level;
     time_t timestamp;
+    int mode;
     void getsample(){
         temp = env.getTemperature();
         pressure = env.getPressure();
@@ -55,7 +56,7 @@ void terminalInput();
 void processUserInput();
 void processDateTime(const std::string& date, const std::string& time);
 void epochConvert(int year, int month, int day, int hour, int minute, int second);
-void stripLED(float temp, float pressure, float light_level);
+void stripLED(float temp, float pressure, float light_level, int mode);
 
 
 //Ticker

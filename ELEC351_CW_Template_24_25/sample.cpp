@@ -78,6 +78,7 @@ void sampleThread(){
     if(sampleOn){
         data.getsample();
         queue.call(sampleP);
+        adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
     }
 }
 
@@ -88,13 +89,19 @@ void timerISR(){
 void sampleP(){
     //dataLock.acquire();
     //add to buffer
-    adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
+    queue.call(adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp));
     
     //print sample results and time and date to terminal
+    queue.call(printsample);
     printsample(data.temp, data.pressure, data.light_level, data.timestamp);
 
     //process the data
+    queue.call(sampleThread);
     thresholdsample(data.temp, data.pressure, data.light_level);
+
+    //Led strip
+    queue.call(sampleThread);
+    stripLED(data.temp, data.pressure, data.light_level, 2);
 
     //dataLock.release();
     
@@ -334,6 +341,11 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     //upper around 30
     //Divide by 3 then by 8 for each colour then each LED respectively
     //normalise the value to max temp being max and set LED
+
+    latchedLEDs.write_strip(0x00,RED);     //Turn off all LEDs on R bar
+    latchedLEDs.write_strip(0x00,GREEN);     //Turn off all LEDs on G bar
+    latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+
     int tempLED = 24 * (temp - 15)/15;
     if(mode == 0){
         if(tempLED < 8){
@@ -347,8 +359,11 @@ void stripLED(float temp, float pressure, float light_level, int mode){
         } else if(tempLED >= 16 && tempLED < 24){
             latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
             latchedLEDs.write_strip((1 << (tempLED - 16)),BLUE);
-        }else
+        }else{
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
             latchedLEDs.write_strip(0xFF,BLUE);     //Turn on all LEDs on B bar
+        }
     }
 
     //pressure
@@ -356,7 +371,24 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     //upper = 1200
     int presLED = 24 * (pressure - 800)/400;
     if(mode == 1){
-        
+        if(presLED < 8){
+            for(int i = 0; i >= presLED; i++){
+            latchedLEDs.write_strip((1 << i),RED);
+            }
+            latchedLEDs.write_strip(0x00,GREEN);     //Turn off all LEDs on G bar
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(presLED >= 8 && presLED < 16){
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip((1 << (presLED - 8)),GREEN);
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(presLED >= 16 && presLED < 24){
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
+            latchedLEDs.write_strip((1 << (presLED - 16)),BLUE);
+        }else{
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
+            latchedLEDs.write_strip(0xFF,BLUE);     //Turn on all LEDs on B bar
+        }
     }
 
     //light
@@ -364,7 +396,29 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     //upper = 1
     int lightLED = light_level*24;
     if(mode == 2){
-        
+        if(lightLED < 8){
+            for(int i = 0; i >= lightLED; i++){
+            latchedLEDs.write_strip((1 << i),RED);
+            }
+            latchedLEDs.write_strip(0x00,GREEN);     //Turn off all LEDs on G bar
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(lightLED >= 8 && lightLED < 16){
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            for(int i = 0; i >= (lightLED-8); i++){
+            latchedLEDs.write_strip((1 << i),GREEN);
+            }
+            latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
+        } else if(lightLED >= 16 && lightLED < 24){
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
+            for(int i = 0; i >= (lightLED-16); i++){
+            latchedLEDs.write_strip((1 << i),BLUE);
+            }
+        }else{
+            latchedLEDs.write_strip(0xFF,RED);      // Turn on all LEDs on R bar
+            latchedLEDs.write_strip(0xFF,GREEN);    //Turn on all LEDs on G bar
+            latchedLEDs.write_strip(0xFF,BLUE);     //Turn on all LEDs on B bar
+        }
     }
 
 }
