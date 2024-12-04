@@ -74,27 +74,8 @@ int main()
 
     while (true) {
         
-        
+        LCD();
 
-        // Print the time and date
-        time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
-        struct tm* tt;                  // Create empty tm struct
-        tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
-        //printf("%s\n",asctime(tt));     // Print in human readable format
-
-        // Write the time and date on the LCD
-        disp.cls();                     // Clear the LCD                 
-        char lcd_line_buffer[17];           
-        
-        strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "%a %d-%b-%Y", tt);  // Create a string DDD dd-MM-YYYY
-        disp.locate(0,0);                                                       // Set LCD cursor to (0,0)
-        disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
-        
-        strftime(lcd_line_buffer, sizeof(lcd_line_buffer), "     %H:%M:%S", tt);   // Create a string HH:mm
-        disp.locate(1,0);                                                       // Set LCD cursor to (0,0)
-        disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
-
-        ThisThread::sleep_for(200ms);
     }
 }
 
