@@ -16,6 +16,7 @@ struct sampleData{
     time_t timestamp;
     int mode;
     void getsample(){
+        samplenum++;
         temp = env.getTemperature();
         pressure = env.getPressure();
         light_level = ldr.read();
@@ -32,20 +33,22 @@ extern Ticker timer;
 extern EventQueue queue;
 
 extern Semaphore inputReadySemaphore;
+extern Semaphore flush_semaphore;
 
 extern int sample_num;
 
 // Buffer to hold multiple samples
 extern std::vector<sampleData> dataBuffer;
 
-extern Mail<sampleData, 10> mail_data;
+extern Mail<sampleData, 1> mail_data;
 
 extern std::string userInput;
 
 extern std::vector<std::string> arguments;
 
+void init();
 void getsample();
-void printsample(float temp, float pressure, float light_level, time_t timestamp);
+void printsample(int sample_num, float temp, float pressure, float light_level, time_t timestamp);
 void thresholdsample(float light_level);
 void sampleThread();
 void sampleP();

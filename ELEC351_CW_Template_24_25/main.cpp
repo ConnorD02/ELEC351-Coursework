@@ -23,9 +23,12 @@
 Thread tsample;
 Thread tq;
 Thread t3;
+Thread twrite;
 
 int main()
 {
+
+    init();
 
     Thread tsample(osPriorityHigh);
     Thread t2(osPriorityNormal);
@@ -65,6 +68,7 @@ int main()
     timer.attach(&timerISR, 10s);
     tq.start(callback(&queue, &EventQueue::dispatch_forever));
     //Start Thread tq onto the event queue
+    twrite.start(writeBufferToSD);
 
     //I don't think this code above is working in the way I think it is
     //A Ticker will count for 10s and then trigger the timerISR which adds sampleThread to the event queue
@@ -78,5 +82,3 @@ int main()
 
     }
 }
-
-

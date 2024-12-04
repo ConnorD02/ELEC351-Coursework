@@ -6,8 +6,7 @@ Ticker timer;
 EventQueue queue;
 
 Semaphore inputReadySemaphore(0, 1);  // Count 0 means no input is ready initially
-
-int sample_num = 0;
+Semaphore flush_semaphore(0, 1);
 
 bool sampleOn = 1;
 
@@ -15,9 +14,13 @@ sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
-Mail<sampleData, 10> mail_data;
+Mail<sampleData, 1> mail_data;
 
-void printsample(float temp, float pressure, float light_level, time_t timestamp){
+void init(){
+    data.samplenum = 0;
+}
+
+void printsample(int sample_num, float temp, float pressure, float light_level, time_t timestamp){
     // Print the samples to the terminal
     printf("\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n", sample_num,temp,pressure,light_level);
 
@@ -25,8 +28,6 @@ void printsample(float temp, float pressure, float light_level, time_t timestamp
     tt = localtime(&data.timestamp);      // Convert time_t to tm struct using localtime
     
     printf("%s\n",asctime(tt));     // Print in human readable format
-
-    sample_num++;
 
     // Write the current light level as a float to the 7-segment display
     latchedLEDs.write_seven_seg(light_level);
@@ -78,7 +79,6 @@ void sampleThread(){
     if(sampleOn){
         data.getsample();
         queue.call(sampleP);
-        adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
     }
 }
 
@@ -89,11 +89,11 @@ void timerISR(){
 void sampleP(){
     //dataLock.acquire();
     //add to buffer
-    //queue.call(adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp));
+    adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
     
     //print sample results and time and date to terminal
     //queue.call(printsample);
-    printsample(data.temp, data.pressure, data.light_level, data.timestamp);
+    printsample(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
 
     //process the data
     //queue.call(sampleThread);
@@ -120,62 +120,100 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
         mail->temp = temp;
         mail->pressure = pressure;
         mail->light_level = light_level;
-        mail->timestamp = 
+        mail->timestamp = timestamp;
         //add sampledata to the mailbox
         mail_data.put(mail);
+
+        if(sample_num % 1 == 0){
+            flush_semaphore.release();
+        }
+
     } else{
-        //add write to SD function here
-        //Write current samples back to the mailbox after flushing it
+        printf("Error: Mailbox is full. Unable to flush.\n");
     }
 }
 
 
-void writeBufferToSD(sampleData datatosend) {
-    //set mailbox into a buffer each time something new comes in
-    while (true) {
+void writeBufferToSD() {
+    while(true) {
+
+        flush_semaphore.acquire();
+
         osEvent evt = mail_data.get();  // Get an event from the mailbox
         if (evt.status == osEventMail) {  // Check if a mail item is received
             sampleData *sample = (sampleData*)evt.value.p;
-            
+
             // Check if the SD card is inserted
             if (sd.card_inserted()) {
+                // Format the sample data into a string and write to the SD card
+                char text_to_write[16];
+                snprintf(text_to_write, sizeof(text_to_write), 
+                    "Sample %d\nTemperature: %.1f\nPressure: %.1f\nLight: %.2f\nTimestamp: %s\n\n", 
+                    sample->samplenum, sample->temp, sample->pressure, sample->light_level, 
+                    asctime(localtime(&sample->timestamp))
+                );
 
-                int err1 = sd.write_file("sample.txt", "sample %d \n", sample->samplenum);
-                int err2 = sd.write_file("sample.txt", "temp = %f\n", sample->temp);
-                int err3 = sd.write_file("sample.txt", "pressure = %f\n", sample->pressure);
-                int err4 = sd.write_file("sample.txt", "light = %f\n", sample->light_level);
-                int err5 = sd.write_file("sample.txt", "%f\n\n", sample->timestamp);
+                int err = sd.write_file("sample1.txt", text_to_write, true);  // Append data to the file
+                if (err == 0) {
+                    printf("Successfully written to SD card\n");
+                    sd.print_file("sample1.txt", false);  // Print file contents for debug
+                } else {
+                    printf("Error writing to SD card\n");
+                }
 
-                //NOTE: Also need to send the time and date with the samples.
-                
-                if(err1 && err2 && err3 && err4 == 0){   // If is successful, read the content of the file back
-            printf("Successfully written to SD card\n");
-            printf("---------------------------\nFile contents:\n");
-            sd.print_file("sample.txt",false);
-            printf("---------------------------\n");
                 // Free the mailbox space after writing
-            mail_data.free(sample);
-        } else{
-            printf("Error Writing to SD card\n");
-        }
-                //but for the samples in the buffer
-                //fprintf(file, "Sample number: %d\n", samples[i]->samplenum);
-                //fprintf(file, "Temperature: %.1f C, Pressure: %.1f mbar, Light Level: %.2f\n\n",
-                //samples[i]->temp, samples[i]->pressure, samples[i]->light_level);
-
+                mail_data.free(sample);
             } else {
                 printf("SD card not inserted\n");
             }
-
-            
-
-            //clear the buffer
         }
     }
-    
 }
 
 /*
+int SDCard::write_file(char* filename, char* text_to_write, bool append, bool print_debug ){
+    if(print_debug){
+        printf("Initialise and write to a file\n");
+    }
+    int err;
+
+    err=sd.init();
+    if ( 0 != err) {
+        if(print_debug){
+            printf("Init failed %d\n",err);
+        }
+        return -1;
+    }
+
+    FATFileSystem fs("sd", &sd);
+    char file_path[128];
+    sprintf(file_path,"/sd/%s",filename);
+    FILE *fp =NULL;
+    if(append){
+        fp= fopen(file_path,"a");
+    } 
+    else{
+        fp= fopen(file_path,"w");
+    }
+    if(fp == NULL) {
+        error("Could not open file for write\n");
+        sd.deinit();
+        return -1;
+    } else {
+        //Put some text in the file...
+        fprintf(fp, text_to_write);
+        fclose(fp);
+        if(print_debug){
+            printf("SD Write done...\n");
+        }
+        sd.deinit();
+        return 0;
+    }
+}
+// Function: SDCard class print_file
+// Reads the data from a file and prints it to the terminal
+
+
     if (sd.card_inserted()) {
         // Open file for appending
         sampleData* samples = new sampleData;
@@ -196,19 +234,7 @@ void writeBufferToSD(sampleData datatosend) {
     }
 }
 
- SD card writing thread - flushes data to the SD card periodically
-void sdCardWriteThread() {
-    while (true) {
-        // Periodically flush the buffer if it's not full yet
-        ThisThread::sleep_for(5s);
-        bufferLock.acquire();
-        if (!sampleBuffer.empty()) {
-            writeBufferToSD();
-            sampleBuffer.clear(); // Clear the buffer after writing
-        }
-        bufferLock.release();
-    }
-}
+
 */
 
 //Terminal commands
