@@ -51,7 +51,7 @@ void sampleThread();
 void sampleP();
 void timerISR();
 void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level, time_t timestamp);
-void writeBufferToSD(sampleData datatosend);
+void writeBufferToSD();
 void terminalInput();
 void processUserInput();
 void processDateTime(const std::string& date, const std::string& time);
