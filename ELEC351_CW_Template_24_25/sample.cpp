@@ -131,21 +131,10 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
         //     flush_semaphore.release();
         // }
 
-    } else{
-        //printf("Error: Mailbox is full. Unable to flush.\n");
+    } 
+    if(mail_data.full()){
         //put semaphore release here
         flush_semaphore.release();
-
-        //try to acquire another semaphore that gets released after SD card write
-        //bufferSemaphore.acquire();
-        //then buffer the current sampled values
-        // mail->samplenum = sample_num;
-        // mail->temp = temp;
-        // mail->pressure = pressure;
-        // mail->light_level = light_level;
-        // mail->timestamp = timestamp;
-        // //add sampledata to the mailbox
-        // mail_data.put(mail);
     }
 }
 
@@ -192,7 +181,7 @@ void writeBufferToSD() {
                     // Format the sample data into a string
                     char text_to_write[256];  // Temporary buffer for each sample's formatted text
                     snprintf(text_to_write, sizeof(text_to_write),
-                        "Sample %d\nTemperature: %.1f\nPressure: %.1f\nLight: %.2f\nTimestamp: %s\n\n",
+                        "\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n%s\n\n",
                         dataSD->samplenum, dataSD->temp, dataSD->pressure, dataSD->light_level, timeStr);
 
                     // Append the formatted data to the full_text buffer
@@ -203,7 +192,7 @@ void writeBufferToSD() {
                 }
             }
 
-                printf(SDsend);
+                //printf(SDsend);
 
                 int err = sd.write_file("sample.txt", SDsend, true);  // Append data to the file
                 if (err == 0) {
@@ -346,6 +335,7 @@ void processUserInput(){
     }else if(command == "flush"){
         //Write current samples in the buffer to the SD card
         printf("Flushing buffer\n");
+        flush_semaphore.release();
 
     }else if(command == "select"){
         if(argument == "T" || argument == "t"){
