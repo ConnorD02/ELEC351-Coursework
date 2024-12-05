@@ -17,7 +17,8 @@
  */
 
 #include "sample.hpp"
-
+#include "Terminal.hpp"
+#include "Output.hpp"
 
 //threads
 Thread tsample;

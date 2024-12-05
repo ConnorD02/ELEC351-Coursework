@@ -32,7 +32,6 @@ extern Ticker timer;
 
 extern EventQueue queue;
 
-extern Semaphore inputReadySemaphore;
 extern Semaphore flush_semaphore;
 extern Semaphore bufferSemaphore;
 
@@ -41,11 +40,13 @@ extern int sample_num;
 // Buffer to hold multiple samples
 extern std::vector<sampleData> dataBuffer;
 
-extern Mail<sampleData, 3> mail_data;
+extern Mail<sampleData, 10> mail_data;
 
 extern std::string userInput;
 
 extern std::vector<std::string> arguments;
+
+extern bool sampleOn;
 
 void init();
 void getsample();
@@ -56,12 +57,7 @@ void sampleP();
 void timerISR();
 void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level, time_t timestamp);
 void writeBufferToSD();
-void terminalInput();
-void processUserInput();
-void processDateTime(const std::string& date, const std::string& time);
-void epochConvert(int year, int month, int day, int hour, int minute, int second);
-void stripLED(float temp, float pressure, float light_level, int mode);
-void LCD();
+
 
 
 //Ticker
