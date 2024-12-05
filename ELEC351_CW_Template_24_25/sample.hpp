@@ -34,13 +34,14 @@ extern EventQueue queue;
 
 extern Semaphore inputReadySemaphore;
 extern Semaphore flush_semaphore;
+extern Semaphore bufferSemaphore;
 
 extern int sample_num;
 
 // Buffer to hold multiple samples
 extern std::vector<sampleData> dataBuffer;
 
-extern Mail<sampleData, 1> mail_data;
+extern Mail<sampleData, 3> mail_data;
 
 extern std::string userInput;
 

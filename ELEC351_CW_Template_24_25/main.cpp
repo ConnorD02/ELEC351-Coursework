@@ -44,6 +44,13 @@ int main()
 
     // Write some text to the SD card
     if(sd.card_inserted()){ // Check to see if the card is present (polls PF_4)
+        int clr = sd.write_file("test.txt", "", false);  // Clear data in the file
+                    if (clr == 0) {
+                        printf("Successfully written to SD card\n");
+                        sd.print_file("test.txt", false);  // Print file contents for debug
+                    } else {
+                        printf("Error writing to SD card\n");
+                    }
         int err = sd.write_file("test.txt", "Plymouth University - ELEC351 Coursework 24-25\n");    // Attempt to write text to file
         if(err == 0){   // If is successful, read the content of the file back
             printf("Successfully written to SD card\n");

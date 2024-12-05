@@ -6,15 +6,18 @@ Ticker timer;
 EventQueue queue;
 
 Semaphore inputReadySemaphore(0, 1);  // Count 0 means no input is ready initially
-Semaphore flush_semaphore(0, 1);
+Semaphore flush_semaphore(0, 1);    //for SD card writing
+Semaphore bufferSemaphore(0, 1);    //for adding the data back to the buffer after the SD card write
 
 bool sampleOn = 1;
+
+bool cleartxt = 0;
 
 sampleData data;
 
 std::vector<sampleData> dataBuffer;
 
-Mail<sampleData, 1> mail_data;
+Mail<sampleData, 3> mail_data;
 
 void init(){
     data.samplenum = 0;
@@ -124,49 +127,101 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
         //add sampledata to the mailbox
         mail_data.put(mail);
 
-        if(sample_num % 1 == 0){
-            flush_semaphore.release();
-        }
+        // if(sample_num % 10 == 0){
+        //     flush_semaphore.release();
+        // }
 
     } else{
-        printf("Error: Mailbox is full. Unable to flush.\n");
+        //printf("Error: Mailbox is full. Unable to flush.\n");
+        //put semaphore release here
+        flush_semaphore.release();
+
+        //try to acquire another semaphore that gets released after SD card write
+        //bufferSemaphore.acquire();
+        //then buffer the current sampled values
+        // mail->samplenum = sample_num;
+        // mail->temp = temp;
+        // mail->pressure = pressure;
+        // mail->light_level = light_level;
+        // mail->timestamp = timestamp;
+        // //add sampledata to the mailbox
+        // mail_data.put(mail);
     }
 }
 
 
 void writeBufferToSD() {
+
     while(true) {
 
         flush_semaphore.acquire();
 
-        osEvent evt = mail_data.get();  // Get an event from the mailbox
-        if (evt.status == osEventMail) {  // Check if a mail item is received
-            sampleData *sample = (sampleData*)evt.value.p;
+        //sampleData* dataSD = mail_data.try_get();  // Get data from the mailbox
+
+        // if (evt.status == osEventMail) {  // Check if a mail item is received
+        //     sampleData *sample = (sampleData*)evt.value.p;
 
             // Check if the SD card is inserted
             if (sd.card_inserted()) {
-                // Format the sample data into a string and write to the SD card
-                char text_to_write[16];
-                snprintf(text_to_write, sizeof(text_to_write), 
-                    "Sample %d\nTemperature: %.1f\nPressure: %.1f\nLight: %.2f\nTimestamp: %s\n\n", 
-                    sample->samplenum, sample->temp, sample->pressure, sample->light_level, 
-                    asctime(localtime(&sample->timestamp))
-                );
 
-                int err = sd.write_file("sample1.txt", text_to_write, true);  // Append data to the file
+                if(cleartxt == 0){
+                    int clr = sd.write_file("sample.txt", "", false);  // Clear data in the file
+                    if (clr == 0) {
+                        printf("Successfully written to SD card\n");
+                        sd.print_file("sample.txt", false);  // Print file contents for debug
+                    } else {
+                        printf("Error writing to SD card\n");
+                    }
+                    cleartxt = 1;
+                }
+                
+                char SDsend[2048];
+                SDsend[0] = '\0';   //empty on init
+
+                while (!mail_data.empty()) {
+                osEvent evt = mail_data.get();  // Get data from the mailbox
+                if (evt.status == osEventMail) {  // Check if a mail item is received
+                    sampleData* dataSD = (sampleData*)evt.value.p;
+
+                    // Prepare the timestamp
+                    struct tm* tt = localtime(&dataSD->timestamp);  // Convert time_t to tm struct using localtime
+                    char timeStr[26];  // Array to store the formatted time string
+                    asctime_r(tt, timeStr);  // Convert tm struct to string (reentrant version of asctime)
+                    timeStr[strlen(timeStr) - 1] = '\0';  // Remove the newline at the end
+
+                    // Format the sample data into a string
+                    char text_to_write[256];  // Temporary buffer for each sample's formatted text
+                    snprintf(text_to_write, sizeof(text_to_write),
+                        "Sample %d\nTemperature: %.1f\nPressure: %.1f\nLight: %.2f\nTimestamp: %s\n\n",
+                        dataSD->samplenum, dataSD->temp, dataSD->pressure, dataSD->light_level, timeStr);
+
+                    // Append the formatted data to the full_text buffer
+                    strncat(SDsend, text_to_write, sizeof(SDsend) - strlen(SDsend) - 1);
+
+                    // Free the mailbox item after processing
+                    mail_data.free(dataSD);
+                }
+            }
+
+                printf(SDsend);
+
+                int err = sd.write_file("sample.txt", SDsend, true);  // Append data to the file
                 if (err == 0) {
                     printf("Successfully written to SD card\n");
-                    sd.print_file("sample1.txt", false);  // Print file contents for debug
+                    sd.print_file("sample.txt", false);  // Print file contents for debug
                 } else {
                     printf("Error writing to SD card\n");
                 }
 
                 // Free the mailbox space after writing
-                mail_data.free(sample);
+                // while (!mail_data.empty()){
+                //     mail_data.free(dataSD);
+                // }
+                // bufferSemaphore.release();
             } else {
                 printf("SD card not inserted\n");
             }
-        }
+        //}
     }
 }
 
@@ -296,14 +351,17 @@ void processUserInput(){
         if(argument == "T" || argument == "t"){
             //set temp on the LED strip
             data.mode = 0;
+            stripLED(data.temp, data.pressure, data.light_level, data.mode);
             printf("Set LED strip to temperature\n");
         }else if(argument == "P" || argument == "p"){
             //set pressure on LED strip
             data.mode = 1;
+            stripLED(data.temp, data.pressure, data.light_level, data.mode);
             printf("Set LED strip to pressure\n");
         }else if(argument == "L" || argument == "l"){
             //set light on the LED strip
             data.mode = 2;
+            stripLED(data.temp, data.pressure, data.light_level, data.mode);
             printf("Set LED strip to light\n");
         }
 
