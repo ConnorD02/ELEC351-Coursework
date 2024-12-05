@@ -117,10 +117,6 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
     sampleData *mail = mail_data.alloc();   //allocate memory for the mailbox
     if(!mail_data.full()){
 
-        struct tm* tt = localtime(&timestamp);  // Convert time_t to tm struct using localtime
-        char timeStr[26];  // Array to store the formatted time string
-        asctime_r(tt, timeStr);  // Convert tm struct to string (reentrant version of asctime)
-
         mail->samplenum = sample_num;
         mail->temp = temp;
         mail->pressure = pressure;
@@ -129,14 +125,10 @@ void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_
         //add sampledata to the mailbox
         mail_data.put(mail);
 
-        // if(sample_num % 10 == 0){
-        //     flush_semaphore.release();
-        // }
 
     } 
     if(mail_data.full()){
-        //put semaphore release here
-        flush_semaphore.release();
+        flush_semaphore.release();  //release the semaphore to allow the write to buffer thread to run.
     }
 }
 
@@ -183,7 +175,7 @@ void writeBufferToSD() {
                     // Append the formatted data to the full_text buffer
                     strncat(SDsend, text_to_write, sizeof(SDsend) - strlen(SDsend) - 1);
 
-                    // Free the mailbox item after processing
+                    // Free the mailbox item after writing the data
                     mail_data.free(dataSD);
                 }   
             }
@@ -191,13 +183,10 @@ void writeBufferToSD() {
             int err = sd.write_file("sample.txt", SDsend, true);  // Append data to the file
             if (err == 0) {
                 printf("Successfully written to SD card\n");
-                //sd.print_file("sample.txt", false);  // Print file contents for debug
+                sd.print_file("sample.txt", false);  // Print file contents for debug
             } else {
                 printf("Error writing to SD card\n");
             }
-
-            // Free the mailbox space after writing
-            // bufferSemaphore.release();
         } else {
             printf("SD card not inserted\n");
         } 
