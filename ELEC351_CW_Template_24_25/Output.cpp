@@ -11,7 +11,7 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     latchedLEDs.write_strip(0x00,GREEN);     //Turn off all LEDs on G bar
     latchedLEDs.write_strip(0x00,BLUE);     //Turn off all LEDs on B bar
 
-    int tempLED = 24 * (temp - 15)/15;
+    int tempLED = 24 * (temp - 15)/15;      //normailse the temperature reading to 24
     if(mode == 0){
         if(tempLED < 8){
             latchedLEDs.write_strip((1 << tempLED)-1,RED);
@@ -34,7 +34,7 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     //pressure
     //lower = 800
     //upper = 1200
-    int presLED = 24 * (pressure - 800)/400;
+    int presLED = 24 * (pressure - 800)/400;        //normailse the pressure reading to 24
     if(mode == 1){
         if(presLED < 8){
             latchedLEDs.write_strip((1 << (presLED))-1,RED);
@@ -57,7 +57,7 @@ void stripLED(float temp, float pressure, float light_level, int mode){
     //light
     //lower = 0
     //upper = 1
-    int lightLED = light_level*24;
+    int lightLED = light_level*24;      //normailse the light reading to 24
     if(mode == 2){
         if(lightLED < 8){
             latchedLEDs.write_strip((1 << (lightLED+1)) - 1,RED);
@@ -85,7 +85,6 @@ void LCD(){
         time_t time_now = time(NULL);   // Get a time_t timestamp from the RTC
         struct tm* tt;                  // Create empty tm struct
         tt = localtime(&time_now);      // Convert time_t to tm struct using localtime
-        //printf("%s\n",asctime(tt));     // Print in human readable format
 
         // Write the time and date on the LCD
         disp.cls();                     // Clear the LCD                 
@@ -99,5 +98,5 @@ void LCD(){
         disp.locate(1,0);                                                       // Set LCD cursor to (0,0)
         disp.printf("%s",lcd_line_buffer);                                      // Write text to LCD
 
-        ThisThread::sleep_for(200ms);
+        ThisThread::sleep_for(200ms);       //updates the LCD every 200ms
 }

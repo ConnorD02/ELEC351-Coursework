@@ -8,11 +8,12 @@ Semaphore inputReadySemaphore(0, 1);    //semaphore for flagging terminal input
 
 std::string userInput;                 //store user input from terminal
 std::vector<std::string> arguments;  // To store arguments from the user input
+//Automatic memory management with std and allows for parsing
 
-extern sampleData data;
+extern sampleData data;     //sampledata struct
 
-bool gotSem;
-extern bool sampleOn;
+bool gotSem;                //flag to see if semaphore has been acquired
+extern bool sampleOn;       //bool to control whether sampling is on or off
 
 void terminalInput() {
     while (true) {
@@ -27,8 +28,7 @@ void terminalInput() {
 }
 
 void processUserInput(){
-    gotSem = inputReadySemaphore.try_acquire_for(1000ms);  //NEED TO SET TO tryaquire
-    //printf("User input: %s\n", userInput.c_str());
+    gotSem = inputReadySemaphore.try_acquire_for(1000ms);  
     if(gotSem){
     std::istringstream ss(userInput);
     //allows the command to be separated into a string and numbers
@@ -45,12 +45,11 @@ void processUserInput(){
     }
 
     // Display the parsed input (for debugging)
-    printf("Command: %s\n", command.c_str());
-    printf("Arguments: ");
+    std::cout << "Command: " << command << std::endl;
+    std::cout << "Arguments: " << std::endl;
     for (const auto& arg : arguments) {
-        printf("%s ", arg.c_str());
+        std::cout << arg << std::endl;
     }
-    printf("\n");
 
     if(command == "datetime"){
         if (arguments.size() == 2) {
