@@ -33,7 +33,6 @@ extern Ticker timer;
 extern EventQueue queue;
 
 extern Semaphore flush_semaphore;
-extern Semaphore bufferSemaphore;
 
 extern int sample_num;
 
@@ -41,10 +40,6 @@ extern int sample_num;
 extern std::vector<sampleData> dataBuffer;
 
 extern Mail<sampleData, 10> mail_data;
-
-extern std::string userInput;
-
-extern std::vector<std::string> arguments;
 
 extern bool sampleOn;
 

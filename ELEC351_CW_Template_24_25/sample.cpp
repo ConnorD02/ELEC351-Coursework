@@ -6,8 +6,7 @@ Ticker timer;
 
 EventQueue queue;
 
-Semaphore flush_semaphore(0, 1);    //for SD card writing
-Semaphore bufferSemaphore(0, 1);    //for adding the data back to the buffer after the SD card write
+Semaphore flush_semaphore;    //for SD card writing
 
 bool sampleOn = 1;
 
@@ -183,7 +182,7 @@ void writeBufferToSD() {
             int err = sd.write_file("sample.txt", SDsend, true);  // Append data to the file
             if (err == 0) {
                 printf("Successfully written to SD card\n");
-                sd.print_file("sample.txt", false);  // Print file contents for debug
+                //sd.print_file("sample.txt", false);  // Print file contents for debug
             } else {
                 printf("Error writing to SD card\n");
             }
