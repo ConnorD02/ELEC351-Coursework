@@ -8,9 +8,9 @@ EventQueue queue;
 
 Semaphore flush_semaphore;    //for SD card writing
 
-bool sampleOn = 1;
+bool sampleOn = 1;            //To check if sampling has been enabled
 
-bool cleartxt = 0;
+bool cleartxt = 0;            //To flag if the text file has been cleared on startup
 
 bool gotFlushSem;
 
@@ -41,6 +41,7 @@ void thresholdsample(float temp, float pressure, float light_level){
     // If the current light level is above a threshold take action
     bool lightT = 0; bool tempT=0; bool presT=0;
 
+    //Set the thresholds with hysteresis
     if(light_level>0.55f){
         lightT = 1;
     }else if(light_level<0.45f){
@@ -79,36 +80,28 @@ void thresholdsample(float temp, float pressure, float light_level){
     }
 }
 
-void sampleThread(){
+void sampleThread(){    //Grabs a sample if sampling is enabled
     if(sampleOn){
         data.getsample();
         queue.call(sampleP);
     }
 }
 
-void timerISR(){
+void timerISR(){        //adds the sample thread to the queue
     queue.call(sampleThread);
+    //Can't call functions in an ISR if semaphores are being used in it
 }
 
 void sampleP(){
-    //dataLock.acquire();
-    //add to buffer
+
     adddataBuffer(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
     
-    //print sample results and time and date to terminal
-    //queue.call(printsample);
     printsample(data.samplenum, data.temp, data.pressure, data.light_level, data.timestamp);
 
-    //process the data
-    //queue.call(sampleThread);
     thresholdsample(data.temp, data.pressure, data.light_level);
 
-    //Led strip
-    //queue.call(sampleThread);
     stripLED(data.temp, data.pressure, data.light_level, data.mode);
 
-    //dataLock.release();
-    
 }
 
 void adddataBuffer(uint32_t sample_num, float temp, float pressure, float light_level, time_t timestamp){
@@ -139,7 +132,7 @@ void writeBufferToSD() {
         flush_semaphore.acquire();
         // Check if the SD card is inserted
         if (sd.card_inserted()) {
-
+            //clear the data in the document on startup
             if(cleartxt == 0){
                 int clr = sd.write_file("sample.txt", "", false);  // Clear data in the file
                 if (clr == 0) {
@@ -148,10 +141,10 @@ void writeBufferToSD() {
                 } else {
                     printf("Error writing to SD card\n");
                 }
-                cleartxt = 1;
+                cleartxt = 1;   //set the flag to say the text file has now been cleared
             }
             
-            char SDsend[2048];
+            char SDsend[2048];  //initialise the array to hold the text data being sent
             SDsend[0] = '\0';   //empty on init
 
             while (!mail_data.empty()) {
@@ -159,30 +152,30 @@ void writeBufferToSD() {
                 if (evt.status == osEventMail) {  // Check if a mail item is received
                     sampleData* dataSD = (sampleData*)evt.value.p;
 
-                    // Prepare the timestamp
-                    struct tm* tt = localtime(&dataSD->timestamp);  // Convert time_t to tm struct using localtime
-                    char timeStr[26];  // Array to store the formatted time string
-                    asctime_r(tt, timeStr);  // Convert tm struct to string (reentrant version of asctime)
-                    timeStr[strlen(timeStr) - 1] = '\0';  // Remove the newline at the end
+                    //Prepare the timestamp
+                    struct tm* tt = localtime(&dataSD->timestamp);  //Convert time_t to tm struct using localtime
+                    char timeStr[26];  //Array to store the formatted time string
+                    asctime_r(tt, timeStr);  //Convert tm struct to string (reentrant version of asctime)
+                    timeStr[strlen(timeStr) - 1] = '\0';  //Remove the newline at the end
 
-                    // Format the sample data into a string
-                    char text_to_write[256];  // Temporary buffer for each sample's formatted text
+                    //Format the sample data into a string
+                    char text_to_write[256];  //array to store each samples data to go into the main array buffer
                     snprintf(text_to_write, sizeof(text_to_write),
                         "\n----- Sample %d -----\nTemperature:\t%3.1fC\nPressure:\t%4.1fmbar\nLight Level:\t%1.2f\n%s\n\n",
                         dataSD->samplenum, dataSD->temp, dataSD->pressure, dataSD->light_level, timeStr);
 
-                    // Append the formatted data to the full_text buffer
+                    //Put the buffered sample into the main buffer
                     strncat(SDsend, text_to_write, sizeof(SDsend) - strlen(SDsend) - 1);
 
-                    // Free the mailbox item after writing the data
+                    //Free the mailbox item after writing the data
                     mail_data.free(dataSD);
                 }   
             }
 
-            int err = sd.write_file("sample.txt", SDsend, true);  // Append data to the file
+            int err = sd.write_file("sample.txt", SDsend, true);  //send data buffer to SD card
             if (err == 0) {
                 printf("Successfully written to SD card\n");
-                //sd.print_file("sample.txt", false);  // Print file contents for debug
+                //sd.print_file("sample.txt", false);  //Print file contents for debug
             } else {
                 printf("Error writing to SD card\n");
             }

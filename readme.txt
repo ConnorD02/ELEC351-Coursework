@@ -1,8 +1,8 @@
 1.-Compulsory Done 10
 
-2.Half done 2
+2.Done 5
 
-3.-Compulsory Not done (maybe a few marks) 3
+3.-Compulsory Done 15
 
 4.Done 10
 
@@ -16,6 +16,6 @@
 
 9.Done 10
 
-10.Done/easy to finish 5
+10.Done/easy to finish 1
 
-Total 79
+Total 89

@@ -21,7 +21,7 @@ void terminalInput() {
         //alows the user to input in real time regardless of the other threads
 
         if (!userInput.empty()){
-            inputReadySemaphore.release();  // Signal that input is ready
+            inputReadySemaphore.release();  //Signal that input is ready
             processUserInput();
         }
     }
@@ -44,7 +44,7 @@ void processUserInput(){
         arguments.push_back(argument);
     }
 
-    // Display the parsed input (for debugging)
+    //Display the user input
     std::cout << "Command: " << command << std::endl;
     std::cout << "Arguments: " << std::endl;
     for (const auto& arg : arguments) {
@@ -53,9 +53,9 @@ void processUserInput(){
 
     if(command == "datetime"){
         if (arguments.size() == 2) {
-            std::string date = arguments[0]; // Get the date string
-            std::string time = arguments[1]; // Get the time string
-            // Call the function to process the datetime string
+            std::string date = arguments[0]; //Get the date string
+            std::string time = arguments[1]; //Get the time string
+
             processDateTime(date, time);
         }
 
@@ -110,7 +110,6 @@ void processDateTime(const std::string& date, const std::string& time){
     //extract all parts of the date and time
     ss >> day >> delimiter >> month >> delimiter >> year;
 
-    //std::getline (ss, time);
     std::stringstream timepart(time);
 
     timepart >> hour >> delimiter >> minute >> delimiter >> second;
