@@ -43,6 +43,7 @@ void processUserInput(){
     while(ss >> argument){
         arguments.push_back(argument);
     }
+    //Takes each argument and pushes it into the arguments vector as seperate variables.
 
     //Display the user input
     std::cout << "Command: " << command << std::endl;
