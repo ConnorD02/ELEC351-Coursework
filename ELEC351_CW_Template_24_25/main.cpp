@@ -1,3 +1,8 @@
+/*
+    Connor Dykes
+    10724083
+*/
+
 /* 
  * Filename: main.cpp
  * Author: Andrew Norris

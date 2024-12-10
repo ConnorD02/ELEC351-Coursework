@@ -1,3 +1,8 @@
+/*
+    Connor Dykes
+    10724083
+*/
+
 #include "sample.hpp"
 #include "Output.hpp"
 

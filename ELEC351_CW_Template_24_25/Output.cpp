@@ -1,3 +1,8 @@
+/*
+    Connor Dykes
+    10724083
+*/
+
 #include "Output.hpp"
 
 void stripLED(float temp, float pressure, float light_level, int mode){
