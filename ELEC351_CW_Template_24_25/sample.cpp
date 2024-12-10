@@ -3,6 +3,8 @@
     10724083
 */
 
+//Holds all the functions required for taking samples, buffering samples, sending samples and processing the sample data
+
 #include "sample.hpp"
 #include "Output.hpp"
 

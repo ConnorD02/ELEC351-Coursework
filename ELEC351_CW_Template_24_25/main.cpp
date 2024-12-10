@@ -81,13 +81,10 @@ int main()
     timer.attach(&timerISR, 10s);
     tq.start(callback(&queue, &EventQueue::dispatch_forever));
     //Start Thread tq onto the event queue
-    twrite.start(writeBufferToSD);
+    twrite.start(writeBufferToSD);  //This constantly attempts to acquire a semaphore before it can run
 
-    //I don't think this code above is working in the way I think it is
-    //A Ticker will count for 10s and then trigger the timerISR which adds sampleThread to the event queue
-    //doing its function and adding the next functions to the queue after till everything is printed and added to buffer
-
-    t3.start(terminalInput);
+    t3.start(terminalInput);    //Set this thread to constantly monitor for a user input. 
+    //This is done to more accurately pick up user inputs with the downside of extra CPU time being taken up.
 
     while (true) {
         

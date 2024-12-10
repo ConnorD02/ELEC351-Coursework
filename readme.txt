@@ -20,12 +20,13 @@ Where any code needs to be blocked, the thread is blocked so that it doesn't tak
 A function constantly runs in a dedicated thread to monitor the users input. Standard classes are used as they are a dynamically allocated C++ function, so less memory will be used up with each user input. This also means that the variable is empty until a user inputs a function. Once the user inputs something into the terminal, a semaphore is released and the thread processes the user input. String stream is used to split the user input into a command and arguments. Each argument is then split and pushed into the arguments std::vector made up of strings. After outputting the users input back to the terminal, a set of if statements are set up to do different things depending on the command entered. "Sampling" enables or disables sampling depending on the arguments "1" or "0". A Boolean sampleOn is set which is checked in an if statement each time the sample function is called. "Select" determines what reading gets output on the LED strip with the arguments "T", "P", and "L" for temperature, pressure and light levels respectively. A global variable in the sampleData structure gets changed to a different number depending on what mode is enabled. "Flush" sends all the data in the mailbox to the SD card by releasing the flush semaphore. "Datetime" is used to change the time on the real time clock. The arguments are split into date and time and then further split into year, month, day and hour, minute, second using the string stream C++ function; split by delimiters. This is then converted back into epoch format and stored into the real time clock which updates the LCD in other functions.
 
 8.Half done need to add more locks 4
+Threads that use a while(True) loop are managed by either sending the thread to sleep for a certain amount of time (like the LCD thread) or use semaphores which need to be acquired before the thread can continue running (like in the serial input and SD card write threads) which both reduce CPU time when the thread is not supposed to be doing anything, allowing other threads to run. Threads that use the same semaphore are controlled in the code so there are no deadlocks, any 2 threads that use 2 of the same semaphores are controlled so the a semaphore is always released at the end of one function so another one can acquire it and run to release another semaphore that the original function needs to acquire to run.
 Mitigate against locks
 
 9.Done 10
-Each reading is normalised to 24 - being the max reading. Each LED on the strip is then turned on according to what integer number the calculations come out with
+Each reading is normalised to 24 - being the max reading. Each LED on the strip is then turned on according to what integer number the calculations come out with. This is done using bit shifting and setting all the LEDs before the selected one on as well.
 
 10.Done/easy to finish 1
-Structred and indented(NEED TO FINISH)
+The code has been accurately commented and indented.
 
 Total 89

@@ -3,6 +3,8 @@
     10724083
 */
 
+//Holds all the functions required for controlling the outputs - LEDs and LCD.
+
 #ifndef OUTPUT_HPP
 #define OUTPUT_HPP
 

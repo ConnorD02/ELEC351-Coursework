@@ -3,6 +3,8 @@
     10724083
 */
 
+//Holds all the functions required for controlling the outputs - LEDs and LCD.
+
 #include "Output.hpp"
 
 void stripLED(float temp, float pressure, float light_level, int mode){

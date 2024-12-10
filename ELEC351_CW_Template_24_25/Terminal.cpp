@@ -3,6 +3,8 @@
     10724083
 */
 
+//Hold all the functions required for user input into the terminal and processing of the user input
+
 #include "Terminal.hpp"
 #include "sample.hpp"
 #include "Output.hpp"
