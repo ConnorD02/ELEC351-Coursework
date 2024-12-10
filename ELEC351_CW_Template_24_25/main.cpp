@@ -37,9 +37,10 @@ int main()
     init();
 
     Thread tsample(osPriorityHigh);
-    Thread t2(osPriorityNormal);
+    Thread tq(osPriorityNormal);
     Thread t3(osPriorityNormal);
-    //maybe set another thread to handle an event queue only consisting of printing 
+    Thread twrite(osPriorityNormal);
+    //set sampling to highest priority and all others to the same priority
 
     // Set output enable on the latched LEDs.
     latchedLEDs.enable(true);
@@ -66,6 +67,14 @@ int main()
         } else{
             printf("Error Writing to SD card\n");
         }
+                int clr2 = sd.write_file("sample.txt", "", false);  // Clear data in the sampling file
+                if (clr2 == 0) {
+                    printf("Successfully written to SD card\n");
+                    //sd.print_file("sample.txt", false);  // Print file contents for debug
+                } else {
+                    printf("Error writing to SD card\n");
+                }
+            
     } else{
         printf("No SD Card Detected\n");
     }

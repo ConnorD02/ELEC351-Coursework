@@ -17,8 +17,6 @@ Semaphore flush_semaphore;    //for SD card writing
 
 bool sampleOn = 1;            //To check if sampling has been enabled
 
-bool cleartxt = 0;            //To flag if the text file has been cleared on startup
-
 bool gotFlushSem;
 
 sampleData data;
@@ -90,7 +88,7 @@ void thresholdsample(float temp, float pressure, float light_level){
 void sampleThread(){    //Grabs a sample if sampling is enabled
     if(sampleOn){
         data.getsample();
-        queue.call(sampleP);
+        queue.call(sampleP);    //passes the data processing functions of to another thread
     }
 }
 
@@ -137,19 +135,11 @@ void writeBufferToSD() {
     while(true) {
 
         flush_semaphore.acquire();
+        sampleOn = 0;   //turn off sampling to prevent race conditions
         // Check if the SD card is inserted
         if (sd.card_inserted()) {
             //clear the data in the document on startup
-            if(cleartxt == 0){
-                int clr = sd.write_file("sample.txt", "", false);  // Clear data in the file
-                if (clr == 0) {
-                    printf("Successfully written to SD card\n");
-                    sd.print_file("sample.txt", false);  // Print file contents for debug
-                } else {
-                    printf("Error writing to SD card\n");
-                }
-                cleartxt = 1;   //set the flag to say the text file has now been cleared
-            }
+            
             
             char SDsend[2048];  //initialise the array to hold the text data being sent
             SDsend[0] = '\0';   //empty on init
@@ -188,6 +178,7 @@ void writeBufferToSD() {
             }
         } else {
             printf("SD card not inserted\n");
-        } 
+        }
+        sampleOn = 1;   //turn sampling back on
     }
 }
