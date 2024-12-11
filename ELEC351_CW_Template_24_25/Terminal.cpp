@@ -20,7 +20,8 @@ std::vector<std::string> arguments;  // To store arguments from the user input
 extern sampleData data;     //sampledata struct
 
 bool gotSem;                //flag to see if semaphore has been acquired
-extern bool sampleOn;       //bool to control whether sampling is on or off
+extern std::atomic<bool> sampleOn;       //bool to control whether sampling is on or off
+//Boolean is atomic so theres no race conditions
 
 void terminalInput() {
     while (true) {
@@ -93,11 +94,11 @@ void processUserInput(){
     }else if(command == "sampling"){
         if(argument == "0"){
             //turn off sampling
-            sampleOn = 0;
+            sampleOn.store(false);
             printf("Sampling OFF\n");
         }else if(argument =="1"){
             //turn on sampling
-            sampleOn = 1;
+            sampleOn.store(true);
             printf("Sampling ON\n");
         }
     }else{

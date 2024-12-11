@@ -15,7 +15,7 @@ EventQueue queue;
 
 Semaphore flush_semaphore;    //for SD card writing
 
-bool sampleOn = 1;            //To check if sampling has been enabled
+std::atomic<bool> sampleOn(true);            //To check if sampling has been enabled
 
 bool gotFlushSem;
 
@@ -86,7 +86,7 @@ void thresholdsample(float temp, float pressure, float light_level){
 }
 
 void sampleThread(){    //Grabs a sample if sampling is enabled
-    if(sampleOn){
+    if(sampleOn.load()){
         data.getsample();
         queue.call(sampleP);    //passes the data processing functions of to another thread
     }

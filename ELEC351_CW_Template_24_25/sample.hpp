@@ -47,7 +47,7 @@ extern std::vector<sampleData> dataBuffer;
 
 extern Mail<sampleData, 10> mail_data;      //FIFO buffer
 
-extern bool sampleOn;   //determines if sampling is enabled or not
+extern std::atomic<bool> sampleOn;   //determines if sampling is enabled or not
 
 void init(); //initialises variables
 void getsample();
